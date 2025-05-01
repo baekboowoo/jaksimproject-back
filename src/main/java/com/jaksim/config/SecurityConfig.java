@@ -68,7 +68,15 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
         );
 
-        http.addFilterAt(new JwtAuthenticationFilter(getAuthenticationManager(configuration)), UsernamePasswordAuthenticationFilter.class);
+        JwtAuthenticationFilter myFilter = new JwtAuthenticationFilter(getAuthenticationManager(configuration));
+        myFilter.setFilterProcessesUrl("/api/login");
+
+        http.addFilterAt(
+                myFilter,
+                UsernamePasswordAuthenticationFilter.class
+            );
+
+
 
         // session --> jwt 방식은 세션 로그인 방식이 아니기 때문에 , session을 STATELESS 상태로 변경
         // STATEFUL --> 이전 트랜잭션에 대한 정보를 저장하는 것
