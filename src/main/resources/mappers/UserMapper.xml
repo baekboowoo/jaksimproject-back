@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD MyBatis 3 Mapper//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.jaksim.mapper.UserMapper">
+    <select id="getUserById"parameterType="String" resultType="com.jaksim.dto.User">
+        SELECT *
+        FROM jaksim_user
+        WHERE user_id = #{id};
+    </select>
+
     <select id="isDuplicateEmail" parameterType="String" resultType="Integer">
         SELECT COUNT(*)
         FROM jaksim_user

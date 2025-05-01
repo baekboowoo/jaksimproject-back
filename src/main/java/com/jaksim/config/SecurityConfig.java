@@ -1,17 +1,36 @@
 package com.jaksim.config;
 
 
+import com.jaksim.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.Collections;
 
 @Configuration  // 이 클래스는 설정을 위한 자바 클래스입니다.
 @EnableWebSecurity // 설정은 설정인데, Security 설정 클래스 입니다.
 public class SecurityConfig {
+
+    AuthenticationConfiguration configuration;
+
+    public SecurityConfig(AuthenticationConfiguration configuration){
+        this.configuration = configuration;
+    }
+
+    @Bean
+    public AuthenticationManager getAuthenticationManager(AuthenticationConfiguration configuration)
+    throws Exception{
+        return configuration.getAuthenticationManager();
+    }
 
     // @Configuration 안의 @Bean은 --> 이미 만들어져있는 클래스 타입 객체를 등록하고 싶을때 사용
     // --> 우리가 실행할 일이 없는 메소드 --> spring boot가 최초로 1회 실행하고,
@@ -27,16 +46,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
 
-        http.cors((auth)-> auth.disable());
-
-        //csrf 설정
-        http.csrf((auth)-> auth.disable() );
+        http.cors((auth)-> auth.configurationSource((request) -> {
+            CorsConfiguration config = new CorsConfiguration();
+            config.setAllowedOrigins(Collections.singletonList("*"));
+            return config;
+        }));
 
 
         // csrf 설정
                 //  크로스 사이트 요청 위조 공격을 방어하기 위한 설정
                 //  이미 로그인이 완료된 사용자 --> 개인정보수정요청
         http.csrf((auth)->auth.disable());
+
         // 기본으로 뜨는 로그인 화면과 관련된 설정
         http.formLogin((auth)->auth.disable());
 
@@ -46,6 +67,8 @@ public class SecurityConfig {
         http.authorizeHttpRequests((auth)->auth.requestMatchers("/api/join").permitAll()
                 .anyRequest().authenticated()
         );
+
+        http.addFilterAt(new JwtAuthenticationFilter(getAuthenticationManager(configuration)), UsernamePasswordAuthenticationFilter.class);
 
         // session --> jwt 방식은 세션 로그인 방식이 아니기 때문에 , session을 STATELESS 상태로 변경
         // STATEFUL --> 이전 트랜잭션에 대한 정보를 저장하는 것

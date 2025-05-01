@@ -11,4 +11,7 @@ public interface UserMapper {
 
     // 회원 정보 저장 메소드
     public void createUser(User user);
+
+    // id를 받아와서 user 정보를 가져오는 메소드
+    public User getUserById(String id);
 }
